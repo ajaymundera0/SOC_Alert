@@ -1,0 +1,104 @@
+# =============================================================================
+# Security Alert Triage Analytics - Configuration
+# =============================================================================
+# All assumptions and tuneable parameters are centralised here.
+# Override any value without touching source code.
+
+# ---------------------------------------------------------------------------
+# Data paths
+# ---------------------------------------------------------------------------
+paths:
+  raw_data_dir: "data/raw"
+  processed_data_dir: "data/processed"
+  database: "data/processed/alerts.duckdb"
+  visualizations_dir: "visualizations"
+
+# ---------------------------------------------------------------------------
+# Dataset configuration
+# ---------------------------------------------------------------------------
+dataset:
+  # "guide" for Microsoft GUIDE, "synthetic" for demo data
+  source: "guide"
+  # Expected GUIDE file(s) in data/raw/
+  # The Kaggle dataset provides GUIDE_train.csv (~2.4 GB) and GUIDE_test.csv (~1.1 GB)
+  guide_files:
+    train: "GUIDE_train.csv"
+    test: "GUIDE_test.csv"
+  # Synthetic dataset size (only used when source == "synthetic")
+  synthetic_rows: 100000
+  synthetic_seed: 42
+
+# ---------------------------------------------------------------------------
+# Column mapping
+# ---------------------------------------------------------------------------
+# Maps raw GUIDE Kaggle CSV columns to the internal schema.
+# GUIDE columns: Id, OrgId, IncidentId, AlertId, AlertTitle, Category,
+#   IncidentGrade, Timestamp, DetectorId, MitreTechniques, EntityType,
+#   EvidenceRole, DeviceId, Sha256, IpAddress, Url, AccountSid, AccountUpn,
+#   AccountObjectId, AccountName, DeviceName, NetworkMessageId,
+#   EmailClusterId, RegistryKey, RegistryValueName, RegistryValueData,
+#   ApplicationId, ApplicationName, OAuthApplicationId, ThreatFamily,
+#   FileName, FolderPath, ResourceIdName, ResourceType, Roles, OSFamily,
+#   OSVersion, AntispamDirection, SuspicionLevel, LastVerdict, CountryCode,
+#   State, City, ActionGrouped, ActionGranular, Usage
+column_mapping:
+  alert_id: "AlertId"
+  incident_id: "IncidentId"
+  org_id: "OrgId"
+  timestamp: "Timestamp"
+  detection_rule: "DetectorId"
+  entity_id: "DeviceId"
+  entity_type: "EntityType"
+  analyst_grade: "IncidentGrade"
+  mitre_technique: "MitreTechniques"
+  alert_title: "AlertTitle"
+  severity: "SuspicionLevel"
+  category: "Category"
+  evidence_role: "EvidenceRole"
+  country_code: "CountryCode"
+  os_family: "OSFamily"
+  action: "ActionGrouped"
+
+# Analyst-grade normalisation
+# The GUIDE dataset uses "TruePositive", "BenignPositive", "FalsePositive"
+grade_mapping:
+  "TruePositive": "TP"
+  "True Positive": "TP"
+  "TP": "TP"
+  "BenignPositive": "BP"
+  "Benign Positive": "BP"
+  "BP": "BP"
+  "FalsePositive": "FP"
+  "False Positive": "FP"
+  "FP": "FP"
+
+# ---------------------------------------------------------------------------
+# Analysis parameters
+# ---------------------------------------------------------------------------
+analysis:
+  # Minimum alert volume for a rule to be included in ranked comparisons
+  min_volume_threshold: 30
+  # Significance level for hypothesis tests
+  alpha: 0.05
+  # Wilson confidence interval level
+  confidence_level: 0.95
+
+# ---------------------------------------------------------------------------
+# Cost-model assumptions
+# ---------------------------------------------------------------------------
+cost_model:
+  # Average minutes an analyst spends triaging one alert
+  average_triage_minutes_per_alert: 20
+  # Fully loaded analyst hourly rate (USD)
+  analyst_hourly_cost: 55.0
+  # Working days per year
+  working_days_per_year: 250
+  # Working hours per day
+  working_hours_per_day: 8
+
+# ---------------------------------------------------------------------------
+# Scenario simulator
+# ---------------------------------------------------------------------------
+simulator:
+  # Alert-volume reduction percentages to evaluate
+  reduction_percentages: [10, 20, 30, 40, 50]
